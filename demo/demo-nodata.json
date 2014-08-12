@@ -1,0 +1,14 @@
+{
+  "uri": "demo/image.jpg",
+  "size": [882, 1100],
+  "delegates": [{
+    "uri": "demo/image-xsmall.jpg",
+    "size": [221, 275]
+  }, {
+    "uri": "demo/image-small.jpg",
+    "size": [441, 550]
+  }, {
+    "uri": "demo/image-large.jpg",
+    "size": [500, 624]
+  }]
+}

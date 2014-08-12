@@ -12,18 +12,20 @@ Element providing solution to no problem in particular.
 @status alpha
 @homepage http://jhohlfeld.github.io/s-img
 -->
-<polymer-element name="s-img" attributes="notitle">
+<polymer-element name="s-img" attributes="src embed">
 
   <template>
 
     <link rel="stylesheet" href="s-img.css" />
 
-    <content></content>
+    <content>
+      <img src="{{responsiveSrc}}" style="width: 100%; height: auto;" />
+    </content>
 
   </template>
 
   <script>
-
+  (function(_) {
     Polymer('s-img', {
       /**
        * The `noevent` event is not actually fired from here,
@@ -33,22 +35,51 @@ Element providing solution to no problem in particular.
        */
 
       /**
-       * The `notitle` attribute does not yet have a purpose.
+       * The `src` points to a service endpoint where the images are requested from.
        *
-       * @attribute notitle
+       * @attribute src
        * @type string
        */
-      notitle: '',
+      src: '',
 
       /**
-       * The `aProp` is a property that does something cool.
+       * The `embed` lets you request the first image included in the response descriptor as base64.
        *
-       * @property aProp
+       * @property embed
        * @type bool
        */
-      aProp: false,
+      embed: false,
+
+      // private: final img src attribute
+      responsiveSrc: '',
 
       ready: function() {
+        this.client = new XMLHttpRequest();
+        this.client.addEventListener('load', this.onLoad.bind(this), false);
+        // var url = new URL(this.src);
+        // url.searchParams.append('embed', this.embed); 
+        // this.client.open('GET', url, true);
+        this.client.open('GET', this.src, true);
+        this.client.send();
+      },
+
+      onLoad: function(e) {
+        this.data = JSON.parse(this.client.response);
+        // if(this.data.data) {
+        //   this.responsiveSrc = this.data['data'];
+        // }
+
+        var MutationObserver = window.WebKitMutationObserver || window.MutationObserver;
+        var update = this.update.bind(this),
+          observer = new MutationObserver(update);
+        observer.observe(document.body, {
+          childList: true,
+          attributes: true,
+          characterData: true,
+          subtree: true
+        });
+        window.addEventListener('resize', update);
+        update();
       },
 
       /**
@@ -58,11 +89,18 @@ Element providing solution to no problem in particular.
        * @return {Object} Returns undefined.
        * @param {String} dummy Serves no purpose today.
        */
-      task: function(dummy) {
+      update: function(m) {
+        var style = getComputedStyle(this),
+          width = parseInt(style.width),
+          height = parseInt(style.height);
+        var obj = _.find(this.data.delegates, function(e) {
+          return (width === '' || e.size[0] >= width) && (height === '' || e.size[1] >= height);
+        });
+        this.responsiveSrc = (obj !== undefined) ? obj.uri : this.data.data || this.data.uri;
       }
 
     });
-
+  })(window._);
   </script>
 
 </polymer-element>
